@@ -1,0 +1,964 @@
+______________________________________________________________________________________________
+-> SELECT	// to view the data 
+* select <colname> from <tablename>;
+
+-> INSERT	// to add values into tables
+* insert into <tname>(<cnames>) values ('values');
+
+-> UPDATE // to modifies one or more rows in table
+* update <tname> set <colname> = 'new_value';		// to update only one row
+* update <tname> set <colname> = 'new_value' where <colname> = 'specific_value';	// to update mulitple rows
+** so where clause is used to modifies multiple rows at same time
+
+-> DELETE	// to remove one or more rows from table
+* delete from <tname> where <colname>='specific value';
+_______________________________________________________________________________________
+
+			###########
+			## MySQL ##
+			###########
+
+- its open source
+- ANSI SQL Only
+- SQL Keywords will be in upper-case
+- Table names will be singular (person table not persons table)
+- Columns names will never be repeated
+
+-----------------------------------------------------------------------------------------
+
+-> Querying data using select statement
+
+* SELECT 'Hello','World';	// here string are select list 
+- DEMO -
+open workbench;
+run the above queries --> will print the output Hello World
+
+- If you want list of columns from a table
+* SELECT <colname>,<colname> FROM <tname>;
+- wild cards select (Bad Practice) *
+
+* good practice is to specify the column name with tablename;
+- SELECT fname, lname FROM person; == SELECT person.fname, person.lname FROM person;
+* this will lead you to run your query faster
+
+-> ALIASING the tablename
+
+* SELECT p.fname, p.lname FROM person p;
+
+** commenting queries in workbench by appending two time (--) before query
+-- SELECT 'Hello','World';
+
+- SELECT 'Hello' as FirstWord, 'World' as SecondWord;
+- SELECT p.person_first_name as FirstName FROM person p;
+
+-> Ways to Constraint the result
+1) using where clause
+2) using Distinct Qualifier
+
+- SELECT p.person_first_name as FirstName FROM person p;
+* this query will result NOT DISTINCT values from that particular columns
+which means suppose if we have one values with mulitple times so it will return all values
+
+- SELECT DISTINCT p.first_name FROM person p;
+* this will gives us the unique values results, this is a way to reduce the data
+
+- SELECT * FROM contacts.person;	// providing databasename with tablename
+
+-------------------------------------------------------------------------------------------
+
+-> WHERE CLAUSE  			// to constrain the result
+
+* comes after the FROM clause
+* contains the Boolean expressions either expression is true or false (like 2>3)
+* only matching the result are there in the result set
+
+- SELECT p.last_name		// Select clause
+ FROM person p;			// From clause
+ WHERE p.first_name = 'izhar'	// Where clause contains the operator like =,<,>,<>(not equal to),<=,>=
+
+=> combining two expression using operators
+
+AND - if both condition is true row is included, if either of them is false row is excluded
+
+- SELECT p.first_name, p.last_name 		// SELECT clause
+  FROM person p					// FROM clause
+  WHERE p.first_name = 'Izhar' 			// WHERE clause
+  AND p.birthdate > '12/31/1965';		// AND operator
+
+OR - if either expression is true the result is included and if both the condition is false the result is excluded
+
+- SELECT p.first_name, p.last_name
+  FROM person p
+  WHERE p.first_name = 'Izhar'
+  OR p.last_name = 'Ahmad';
+
+BETWEEN - acts on column value and two addtional values, true if column values is between two  values
+          includes two values (like >= & <=) 
+
+- SELECT p.first_name, p.last_name
+  FROM person p
+  WHERE p.contacted
+  BETWEEN 1 AND 20; 
+
+LIKE - String matching with special characters inside, if the match is true the row is returned
+
+- SELECT p.last_name
+  FROM person p
+  WHERE p.first_name 
+  LIKE 'I%';
+
+IN - like a multi-value operator, true if any of the values in the list "hit"
+
+- SELECT p.first_name, p.last_name
+  FROM person p
+  WHERE p.first_name 
+  IN ('Jon','Fritz');
+        |       |----------> column value1
+        |------------------> column value2
+
+IS - likes  a equal operator, but just for values that might be NULL
+     
+- SELECT p.first_name, p.last_name
+  FROM person p
+  WHERE p.last_name
+  IS NULL;
+
+IS NOT - also just for NULL like "not equal operators"
+
+- SELECT p.first_name, p.last_name
+  FROM person p
+  WHERE p.last_name
+  IS NOT NULL; 
+
+-> SHAPING RESULTS USING ORDER BY and GROUP BY
+
+# ORDER BY - allows sorting of result set, after the where clause (if there is one)
+             specify one or more columns, separate columns by commas ASC (default) or DESC
+
+- SELECT p.first_name, p.last_name
+  FROM person p
+  ORDER BY p.last_name;
+
+* SET FUNCTION - passes column name to function, use in place of columns in
+                 SELECT clause, compute new values from column values 
+                 often use with DISTINCT qualifier.
+                 Example:- 
+		 COUNT - includes NULL values if 8 is used
+		 MAX - maximum value of column work with all datatypes doesnt include NULL values
+		 MIN - minimum value of column work with all datatypes doesnt include NULL values
+		 AVG - average of all value of column doesnt include NULL values work with numeric data type columns
+		 SUM - sum of all the value of column doesnt include the NULL values work with numeric data types columns
+COUNT
+
+- SELECT COUNT(*) 
+  FROM person p;
+
+- SELECT COUNT(p.first_name)
+  FROM person p
+  WHERE p.first_name = 'Izhar';
+
+MAX & MIN
+
+- SELECT MAX(p.salary)
+  FROM person p;
+
+- SELECT MIN(p.salary)
+  FROM person p;
+  
+AVG & SUM
+
+- SELECT AVG(p.salary)
+  FROM person p;
+
+- SELECT SUM(p.salary)
+  FROM person p;
+
+=> Set functions with qualifiers 
+
+* often used together
+* Add inside of the function
+* Run against DISTINCT column values
+ 
+- SELECT COUNT(DISTINCT p.first_name)
+  FROM person p;
+
+# GROUP BY - allows multile columns with set of function
+             Breaks result into subset
+             runs set function against each subset
+             result set returns 1 row per subset
+             subset is dedicated by column in GROUP BY
+            * column must appear in SELECT LIST
+             appears after FROM and/or WHERE clause
+
+- SELECT COUNT(p.first_name),
+  p.first_name			// group by column in SELECT LIST
+  FROM person p
+  GROUP BY p.first_name;
+
+- SELECT COUNT(DISTINCT p.first_name),
+  p.first_name
+  FROM person p
+  GROUP BY p.first_name;
+
+# HAVING - works like WHERE against SELECT
+
+- SELECT 
+  COUNT(p.first_name),
+  p.first_name
+  FROM person p
+  GROUP BY p.first_name
+  HAVING COUNT(p.first_name) >=5;
+
+// writing the above query clearly 
+- SELECT 
+  COUNT(p.first_name) as FirstNameCount,
+  p.first_name
+  FROM person p
+  GROUP BY p.first_name
+  HAVING FirstNameCount > 1; 
+
+-----------------------------------------------------------------------------
+
+     ORDER BY - to sort result sets
+SET functions - to roll-up or slice
+     GROUP BY - to create subsets
+       HAVING - to restrict group by
+__________________________________________________________________________________
+
+=> JOINS CLAUSE
+
+* Merges multiple tables into one result set
+* FROM clause includes all tables
+* separate each table with a comma
+* where clause typically included
+* Expression with columns from each table
+* Different types of JOINS
+
+-> CROSS JOINS
+
+* Simplest Join
+* All rows from both tables 
+* No where clause
+* Least useful
+* Ineffiecient
+* Cartesian Product
+* CROSS keyword applied
+
+- SELECT p.first_name,e.email_address		// SELECT CLAUSE
+  FROM person p, email_address e		// FROM CLAUSE with MULITPLE tables
+
+* This is what it will create Cartesian Product - which is BAD Practice
+
+-- DO NOT RUN THIS AT HOME OR WORK OR ANYWHERE
+
+- SELECT 
+  p.person_first_name,
+  p.person_last_name,
+  e.email_address
+  FROM
+  person p,
+  email_address e;
+--------------------------------------------------------------------------------
+
+-> INNER JOIN
+
+* Most typical JOIN
+* Emphasize relational nature of databases
+* Match column in first table to second
+* Primary key to foreign is most common
+* doesnt deal with NULL values
+
+- SELECT
+  p.first_name, p.last_name,
+  e.email_address
+  FROM
+  person p
+  INNER JOIN
+  email_address e
+  ON
+  p.person_id =					// primary key column
+  e.email_address_person_id; 			// foreign key column
+
+-> OUTER JOIN 
+
+* deals with NULL values 
+* work even when no match is found in second table
+* NULL columns if no match in second table
+* FULL OUTER JOIN returns all joined rows (return NULL in first table if no data and data in second viceversa)
+* NULL when no match in either table 
+
+-> LEFT OUTER JOIN
+
+* Another NULL-related JOIN
+* All rows from the left side will be returned
+* NULL for non-matching right side table
+
+- SELECT 
+  p.first_name, p.last_name
+  e.email_address
+  FROM
+  person p
+  LEFT OUTER JOIN
+  email_address e
+  ON
+  p.person_id =
+  e.email_address_person_id; 
+
+-> RIGHT OUTER JOIN
+
+* opposite of left outer join
+* return all right rows 
+* NULL for non matching left side table 
+
+- SELECT 
+  p.first_name, p.last_name
+  e.email_address
+  FROM
+  person p
+  RIGHT OUTER JOIN
+  email_address e
+  ON
+  p.person_id =
+  e.email_address_person_id; 
+
+-> FULL OUTER JOIN
+
+
+* we generally dont use it but keep in mind that the query exists and doesnt support in mysql
+  but we can simulate them using UNION
+
+- SELECT 
+  p.first_name, p.last_name
+  e.email_address
+  FROM
+  person p
+  LEFT OUTER JOIN
+  UNION DISTINCT
+  email_address e
+  ON
+  p.person_id =
+  e.email_address_person_id; 
+
+* a similar query in left inner join equivalent to full outer join query 
+
+-> SELF JOIN
+
+* no such a keyword SELF
+* we can join a table on itself
+* odd but somtimes useful
+* no special syntax
+* same table on left and right side of JOIN
+* Useful when table contains hierarchical data
+__________________________________________________________________________________________________
+
+-> INSERT	
+
+* only on table at a time
+* list of columns in parens
+* values required
+* list of values in parens
+* columns and values must be equal
+
+- INSERT INTO 
+  person
+  (person_id,
+   first_name,
+   last_name,
+   contacted_number,
+   date_last_contacted,
+   date_added)
+   VALUES
+   (1,
+    'Mohd',
+    'Izhar',
+    0,
+    '2016-05-14 11:43:31',
+    '2016-05-14 11:43:31');
+
+-> BULK INSERT 
+
+* insert allow only one table and columnlist
+* insert multiple rows with one statement 
+* either multiple values list or
+* Select statement following table name
+
+- INSERT INTO 
+  person p
+  SELECT * 
+  FROM
+  old_person op
+  WHERE op.person_id > 300;
+
+- INSERT INTO 
+  person
+  (person_id,
+   first_name,
+   last_name,
+   contacted_number,
+   date_last_contacted,
+   date_added)
+   VALUES
+   (1,
+    'Mohd',
+    'Izhar',
+    0,
+    '2016-05-14 11:43:31',
+    '2016-05-14 11:43:31'),
+    (2,
+    'Mohd',
+    'Izhar',
+    0,
+    '2016-05-14 11:43:31',
+    '2016-05-14 11:43:31');
+
+-> UPDATE 
+
+- UPDATE
+  email_address e
+  SET
+  e.email_address =
+  'abc@gmail.com'
+  WHERE
+  e.email_address_id = 5;
+
+* must use where clause 
+
+-> DELETE 
+
+* delete one or more rows in a table
+* Permanent 
+* Use of WHERE clause is critical 
+
+- DELETE FROM person p; 		// Bad practice
+- DELETE FROM person p
+  WHERE p.id = 5;
+
+____________________________________________________________________________________________
+
+# DDL (Data Definition Language) - SQL subset for creating databases and tables
+
+-> CREATE DATABASES
+
+- CREATE DATABASE contact;
+- USE DATABASE contact;
+
+-> CREATE TABLE
+
+- CREATE TABLE
+  email_address		// tablename
+  (email_address_id INTEGER,
+   email_address_person_id INTEGER,
+   email_address VARCHAR(55)
+   );
+
+
+-> NULL VALUES
+
+* NOT NULL must be specified by default column values NULL
+* Inserting not NULL value ok but will give error if value not inserted in NOT NULL
+
+- CREATE TABLE
+  email_address		
+  (email_address_id INTEGER NOT NULL,
+   email_address_person_id INTEGER,
+   email_address VARCHAR(55) NOT NULL
+   );
+
+-> PRIMARY KEY 
+
+* must be unique value per row
+* must be NOT NULL
+* can be mulitple columns (compound key)
+
+- CREATE TABLE
+  email_address		
+  (email_address_id INTEGER PRIMARY KEY,
+   email_address_person_id INTEGER,
+   email_address VARCHAR(55) NOT NULL
+   );
+
+-> CONSTRAINT 
+
+* way to add key in one grouping
+* Primary key or Foreign Key
+
+- CREATE TABLE phone_number
+  (
+  phone_number_id
+  INTEGER NOT NULL,
+  phone_number_person_id
+  INTEGER NOT NULL,
+  phone_number
+  varchar(55) NOT NULL,
+  CONSTRAINT
+  PK_phone_number
+  PRIMARY KEY
+  (phone_number_id)
+  );
+
+-> ALTER TABLE
+
+* used to change an existing table
+* ADD or REMOVE column
+* change column data type or constraint
+* must comply with current data
+
+- ALTER TABLE
+  email_address
+  ADD CONSTRAINT
+  FK_email_address_person
+  FOREIGN KEY
+  (email_address_person_id)
+  REFERENCES
+  person
+  (person_id);
+
+
+-> DROP TABLE
+
+* be careful its permanent
+* removes table and all data from databases
+* error if table is a foreign key to other table
+
+- DROP TABLE person; 
+
+________________________________________________________________________________________________
+
+-> MySQL more queries
+
+- SELECT 'MyFirstValue';
+- SELECT 'MyFirstValue' as SomeValue;		// providing some alias
+- SELECT 1+1;					// we can perform arithmetic operation but column value should be 1+1 and row value 2
+- SELECT 1+1 as Two;				// aliasing
+- SELECT NOW();					// to get current date time
+- SELECT CURDATE();				// to get current date only
+- SELECT CURTIME();				// to get current time
+- SELECT PI();					// to get value of phi 3.14
+- SELECT MOD(45,7);				// to find the remainder
+- SELECT SQRT(25);				// to find the square root 
+
+
+* use MySQL workbench and use sakila database
+
+- SELECT * 
+  FROM sakila.actor;
+
+- SELECT * 
+  FROM sakila.city;
+
+- SELECT *
+  FROM sakila.actor
+  ORDER BY first_name;				// sorting in alphabetical order
+
+- SELECT *
+  FROM sakila.actor
+  ORDER BY last_name;				// sorting in alphabetical order
+
+- SELECT * 
+  FROM sakila.actor
+  ORDER BY first_name DESC;			// by default sorting in ascending order it can be changed to DESC = descending order
+
+- SELECT first_name, last_name
+  FROM sakila.actor;
+
+- SELECT first_name, last_name
+  FROM sakila.actor
+  ORDER BY first_name DESC;
+
+- SELECT a.first_name, a.last_name
+  FROM sakila.actor a
+  WHERE a.actor_id > 100;			// filtering data
+
+- SELECT * 
+  FROM sakila.actor a
+  WHERE a.first_name = 'Nick';
+
+- SELECT a.first_name,a.last_name,a.actor_id 
+  FROM sakila.actor a
+  WHERE a.first_name = 'Nick'
+  OREDER BY actor_id DESC;
+
+- SELECT a.actor_id,a.first_name, a.last_name
+  FROM sakila.actor a
+  WHERE a.actor_id > 100
+  ORDER BY a.first_name, a.last_name DESC; 	// first column is ordered in ascending and last column in descending
+
+- SELECT a.actor_id, a.first_name, a.last_name
+  FROM sakila.actor a
+  WHERE a.actor_id > 100
+  ORDER BY a.first_name DESC, a.last_name DESC;
+
+-- RETRIVING EMPTY RESULT
+
+- SELECT 
+  FROM sakila.actor
+  WHERE 1=2;					// this result is always false so output will be empty
+--
+
+#################################
+## ARITHMETIC OPERATION IN SQL ## 
+#################################
+
+* Mulitplication 
+/ Division
+DIV Integer Division
+% Modulo
++ Addition
+- Subtraction 
+
+# order of precedence is as above
+# evaluates from left to right
+
+- SELECT r.rental_date, r.inventory_id, r.return_date
+  FROM sakila.rental r;
+
+- SELECT 
+  r.rental_date as RentalDate,				// aliasing column name
+  r.inventory_id as InventoryID,
+  r.return_date as ReturnDate
+  FROM sakila.rental r;
+    
+- SELECT f.replacement_cost - f.rental_rate,
+  f.film_id as FilmID,
+  length/60
+  FROM sakila.film f;
+
+- SELECT f.replacement_cost - f.rental_rate as CostDiff,
+  f.film_id as FilmID,
+  length/60 as TimeHour
+  FROM sakila.film f;
+
+- SELECT 
+  f.rental_rate as RentalRate,
+  f.rental_rate + 3 * 4 - 1 as Result1,
+  (f.rental_rate + 3) * 4 - 1 as Result2,
+  (f.rental_rate + 3) * (4 - 1) as Result3,
+  f.rental_rate + (3 * 4) - 1 as Result4
+  FROM sakila.film f;
+
+- SELECT 
+  f.replacement_cost as ReplacementCost,
+  f.replacement_cost / 5 as DecimalRentalRate,
+  f.replacement_cost DIV 5 as IntegerRentalRate,
+  f.replacement_cost % 5 as RemainderRentalRate
+  FROM sakila.film f;
+
+--------------------------------SELECT clasue with Various Functions-------------------------------------
+
+- SELECT * 
+  FROM sakila.actor;
+
+- SELECT * 
+  FROM sakila.payment;
+
+----------------------
+-> INTEGER FUNCTION  |
+----------------------
+
+- SELECT p.amount,
+  ROUND(p.amount) Amt, ROUND(p.amount,1) Amt1,			// round to decimal value and number of upto round
+  FLOOR(p.amount) FloorAmt, CEILING(p.amount) CeilAmt		// floor returns only int value and ceil return value int after rounding
+  FROM sakila.payment p;
+
+- SELECT ROUND(2.49);
+- SELECT ROUND(2.56);
+- SELECT FLOOR(2.49);
+- SELECT FLOOR(2.56);
+- SELECT CEIL(2.49);
+- SELECT CEIL(2.56);
+
+--------------------
+-> STRING FUNCTION |
+--------------------
+
+- SELECT 
+  CONCAT(a.first_name,' ',a.last_name) as FullName
+  FROM sakila.actor a;
+
+- SELECT 
+  CONCAT(a.first_name,' ',a.last_name) as FullName
+  CONCAT(LEFT(a.first_name,1),' ',LEFT(a.last_name,1)) as Initials
+  FROM sakila.actor a;
+
+- SELECT 
+  CONCAT(a.first_name,' ',a.last_name) as FullName
+  CONCAT(LEFT(a.first_name,1),LEFT(a.last_name,1)) as Initials	// removing spaces
+  FROM sakila.actor a;
+
+- SELECT 
+  CONCAT(a.first_name,' ',a.last_name) as FullName,
+  LENGTH(CONCAT(a.first_name,' ',a.last_name)) as Length,	// to get length of string
+  CONCAT(LEFT(a.first_name,1),' ',LEFT(a.last_name,1)) as Initials
+  FROM sakila.actor a;
+
+- SELECT
+  CONCAT(a.first_name,' ',a.last_name) as FullName,  
+  REVERSE(CONCAT(a.first_name,' ',a.last_name)) as ReverseFullName,		// to reverse string
+  REPLACE(CONCAT(a.first_name,' ',a.last_name),'S','$') as ReplaceCharacter	// to replace particular character
+  FROM sakila.actor a;
+
+--------------------------
+-> DATE_FORMAT FUNCTIONS |
+--------------------------
+
+- SELECT 
+  CONCAT(a.first_name,' ',a.last_name) as FullName,
+  DATE_FORMAT(a.last_update, '%m/%d/%y') as LastUpdate1,
+  DATE_FORMAT(a.last_update, '%d-%m-%y') as LastUpdate2,
+  DATE_FORMAT(a.last_update,'%d %b %y %T:%f') as LastUpdate3		// %b to display month name upto 3 char
+  FROM sakila.actor a;
+
+* Time varies from country to country so in order to solve that lets use the function GET_FORMAT
+
+- SELECT 
+  CONCAT(a.first_name,' ',a.last_name) as FullName,
+  DATE_FORMAT(a.last_update, GET_FORMAT(DATETIME,'EUR')) as LastUpdate1,
+  DATE_FORMAT(a.last_update, GET_FORMAT(DATETIME,'ISO')) as LastUpdate2,
+  DATE_FORMAT(a.last_update, GET_FORMAT(DATETIME,'USA')) as LastUpdate3
+  FROM sakila.actor a;
+
+- SELECT 
+  CONCAT(a.first_name,' ',a.last_name) as FullName,
+  DATE_FORMAT(a.last_update, GET_FORMAT(DATE,'EUR')) as LastUpdate1,
+  DATE_FORMAT(a.last_update, GET_FORMAT(DATE,'ISO')) as LastUpdate2,
+  DATE_FORMAT(a.last_update, GET_FORMAT(DATE,'USA')) as LastUpdate3
+  FROM sakila.actor a;
+
+-----------------------------------------------------------------------
+
+- SELECT a.actor_id,a.first_name, a.last_name
+  FROM sakila.actor a
+  WHERE a.first_name < 'Nick';
+
+- SELECT a.actor_id,a.first_name, a.last_name
+  FROM sakila.actor a
+  WHERE a.first_name = 'Nick';
+
+- SELECT a.actor_id,a.first_name, a.last_name
+  FROM sakila.actor a
+  WHERE a.first_name != 'Nick';
+
+- SELECT a.actor_id,a.first_name, a.last_name
+  FROM sakila.actor a
+  WHERE NOT a.first_name = 'Nick';			// same as above query 
+
+- SELECT * 
+  FROM sakila.actor a
+  WHERE a.first_name = 'KENETH' 
+  AND a.actor_id < 180 
+  OR a.last_name = 'TEMPLE'; 
+
+- SELECT * 
+  FROM sakila.actor a
+  WHERE a.first_name = 'KENETH' 
+  OR a.actor_id < 180 
+  AND a.last_name = 'TEMPLE';
+
+* AND condition is evaluated first, if use with parenthesis so then 
+  parenthesis part will be executed first
+ 
+- SELECT * 
+  FROM sakila.actor a
+  WHERE a.first_name IN ('KEVIN','JOHN','JACOB');
+
+- SELECT * 
+  FROM sakila.actor a
+  WHERE a.actor_id IN (1,3,6,8,10);
+
+- SELECT *
+  FROM sakila.actor a
+  WHERE a.actor_id NOT IN (5,7,11);
+
+- SELECT *
+  FROM sakila.actor a
+  WHERE a.first_name IN ('NICK','JOHNNY', 'JOE', 'VIVIEN')
+  OR a.actor_id IN 
+ (SELECT a.actor_id
+  FROM sakila.actor a
+  WHERE a.last_name = 'DEGENERES');  
+
+- SELECT *
+  FROM sakila.actor a
+  WHERE a.first_name IN ('NICK','JOHNNY', 'JOE', 'VIVIEN')
+  AND a.actor_id IN 
+ (SELECT a.actor_id
+  FROM sakila.actor a
+  WHERE a.last_name = 'DEGENERES');  
+
+- SELECT * 
+  FROM sakila.actor a
+  WHERE a.actor_id > 10 AND actor_id < 20;
+
+- SELECT * 
+  FROM sakila.actor a
+  WHERE a.actor_id 
+  BETWEEN 10 AND 20;
+
+- SELECT * 
+  FROM sakila.actor a
+  WHERE a.actor_id 
+  NOT BETWEEN 10 AND 20;
+
+- SELECT *
+  FROM sakila.actor a
+  WHERE a.first_name
+  LIKE 'A%';
+
+- SELECT *
+  FROM sakila.actor a
+  WHERE a.first_name
+  LIKE 'AL%';
+
+- SELECT *
+  FROM sakila.actor a
+  WHERE a.first_name
+  LIKE 'A__E';					// restricting character starting with A and ending with E and have only two characters in between
+
+- SELECT *
+  FROM sakila.actor a
+  WHERE a.first_name
+  LIKE 'A__E%';
+
+- SELECT *
+  FROM sakila.actor a
+  WHERE a.first_name
+  LIKE 'A%E%';
+
+--------------------
+-> ORDER BY CLAUSE |
+--------------------
+
+* sequence
+* operated on single as well as multi coumn
+* expressions
+* Alias
+* Column Number
+
+
+- SELECT * 
+  FROM sakila.address a
+  ORDER BY a.district;
+
+- SELECT * 
+  FROM sakila.address a
+  ORDER BY a.district DESC;
+
+- SELECT * 
+  FROM sakila.address a
+  ORDER BY a.district, a.postal_code DESC;
+
+- SELECT a.actor_id,
+  CONCAT(a.first_name,' ',a.last_name) as FullName
+  FROM sakila.actor a
+  ORDER BY CONCAT(a.first_name,' ',a.last_name);
+
+- SELECT a.actor_id,
+  CONCAT(a.first_name,' ',a.last_name) as FullName
+  FROM sakila.actor a
+  ORDER BY Fullname;					// same as above query just using alias
+
+- SELECT a.actor_id,
+  CONCAT(a.first_name,' ',a.last_name) as FullName
+  FROM sakila.actor a
+  ORDER BY 2;						// sorting by specific column number i.e. is FullName
+
+- SELECT * 
+  FROM sakila.actor a
+  ORDER BY actor_id
+  LIMIT 10;
+
+- SELECT * 
+  FROM sakila.actor a
+  ORDER BY actor_id
+  LIMIT 15,10;						// providing offset which means strarting from 15 and limiting to 10 rows
+
+- SELECT * 
+  FROM sakila.actor a
+  ORDER BY a.actor_id
+  LIMIT 25,5;
+
+-----------------------------------------------------------------------------------------------------------
+
+ -------------------------------------
+ | CREATING TABLE AND INSERTING DATA |
+ -------------------------------------
+
+- CREATE TABLE actor_sample(
+  actor_id smallint(5) unsigned NOT NULL AUTO_INCREMENT,
+  first_name varchar(45) NOT NULL,
+  last_name varchar(45) NULL,
+  last_update timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (actor_id)
+  );
+
+- INSERT INTO
+  sakila.actor_sample 
+  (first_name, last_name, last_update)
+  VALUES
+  ('Mohd','Izhar','2013-04-15');
+
+- SELECT  *
+  FROM sakila.actor_sample;
+
+- INSERT INTO
+  sakila.actor_sample 
+  VALUES
+  (DEFAULT,'Izhar','Ahmad','2013-04-15');
+
+* in the above query we didn't specify the columns so we have to specify the all values
+  if we specify the columns so we need to specify that value else values will be default
+  and order will be according to columns specified
+
+- INSERT INTO
+  sakila.actor_sample 
+  (first_name, last_name)
+  VALUES
+  ('Md','Izhar');
+
+- INSERT INTO
+  sakila.actor_sample 
+  (first_name)
+  VALUES
+  ('Mohammad');
+
+- INSERT INTO
+  sakila.actor_sample 
+  (first_name, last_name, last_update)
+  VALUES
+  ('Mohd','Izhar','2013-04-15'),
+  ('Md','Izhar','2015-03-29),
+  ('Mohammad','Izhar''2020-04-20');	   
+
+- INSERT INTO
+  sakila.actor_sample 
+  (first_name, last_name, last_update)
+  SELECT a.first_name, a.last_name, a.last_update
+  FROM sakila.actor a
+  WHERE a.first_name = 'NICK';
+
+- SELECT *
+  FROM sakila.actor_sample;
+
+- UPDATE sakila.actor_samlple
+  SET first_name = 'MDI'
+  WHERE actor_id 
+  IN (SELECT actor_id
+  FROM film_actor
+  WHERE film_id = 1);
+
+* run subquery to check the output of updating ids
+
+- DELETE 
+  FROM sakila.actor_sample
+  WHERE actor_id IN (3,4,5);
+
+- DELETE
+  FROM sakila.actor_sample
+  WHERE actor_id IN 
+  (SELECT actor_id
+   FROM film_actor
+   WHERE film_id =1);
+
+- DELETE FROM sakila.actor_sample;
+
+

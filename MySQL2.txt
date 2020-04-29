@@ -1,0 +1,905 @@
+----------
+-> JOINS |
+----------
+
+=> INNER JOINS 
+
+* returns rows when there is at least one match in both the tables 
+* avoid ambiguity by qualifying each column name with table name 
+* returns results which are common in both tables
+
+# Implicit Syntax
+
+- SELECT t1.*, t2.*
+  FROM table t1, table t2
+  WHERE t1.id = t2.id;
+
+# Explicit Syntax
+ 
+- SELECT t1.*, t2.*
+  FROM table t1
+  INNER JOIN
+  table t2
+  ON t1.id = t2.id
+
+--DEMO
+
+- CREATE TABLE table1
+  (id INT, value VARCHAR(10));
+
+- INSERT INTO table1 (id, value)
+  SELECT 1,'First'
+  UNION ALL
+  SELECT 2,'Second'
+  UNION ALL
+  SELECT 3,'Third'
+  UNION ALL
+  SELECT 4,'Fourth'
+  UNION ALL
+  SELECT 5,'Fifth';
+
+  
+- CREATE TABLE table2
+  (id INT, value VARCHAR(10));
+
+- INSERT INTO table2 (id, value)
+  SELECT 1,'First'
+  UNION ALL
+  SELECT 2,'Second'
+  UNION ALL
+  SELECT 3,'Third'
+  UNION ALL
+  SELECT 6,'Sixth'
+  UNION ALL
+  SELECT 7,'Seventh'
+  UNION ALL
+  SELECT 8,'Eighth';
+     
+- SELECT * 
+  FROM table1;
+
+- SELECT * 
+  FROM table2;
+
+- SELECT t1.*, t2.*
+  FROM
+  sakila.table1 t1
+  INNER JOIN
+  sakila.table2 t2
+  ON t1.id = t2.id;
+
+- SELECT t1.id as T1_id, t1.value AS T1_values,
+  t2.id as T2_id, t2.value AS T2_values
+  FROM
+  sakila.table1 t1
+  INNER JOIN
+  sakila.table2 t2
+  ON t1.id = t2.id;
+ 
+=> OUTER JOIN 
+
+# LEFT OUTER JOIN
+
+* return all values from the left tables with the matching rows from the right table
+* If there are no columns matching in the right table, it returns NULL values
+
+- SELECT t1.*, t2.*
+  FROM
+  sakila.table1 t1
+  LEFT OUTER JOIN
+  sakila.table2 t2
+  ON t1.id = t2.id;
+
+- SELECT t1.id AS T1_id, t1.value AS T1_value,
+  t2.id AS T2_id, t2.value AS T2_value
+  FROM sakila.table1 t1
+  LEFT OUTER JOIN
+  sakila.table2 t2
+  ON t1.id = t2.id;
+ 	  
+# RIGHT OUTER JOIN
+
+* return all values from the right tables with the matching rows from the left table
+* If there are no columns matching in the left table, it returns NULL values
+
+- SELECT t1.*, t2.*
+  FROM
+  sakila.table1 t1
+  RIGHT OUTER JOIN
+  sakila.table2 t2
+  ON t1.id = t2.id;
+
+- SELECT t1.id AS T1_id, t1.value AS T1_value,
+  t2.id AS T2_id, t2.value AS T2_value
+  FROM sakila.table1 t1
+  RIGHT OUTER JOIN
+  sakila.table2 t2
+  ON t1.id = t2.id;
+
+* you can use LEFT JOIN and swap table position you will get the same result as RIGHT JOIN
+
+- SELECT t1.*, t2.*
+  FROM
+  sakila.table2 t2
+  LEFT OUTER JOIN
+  sakila.table1 t1
+  ON t1.id = t2.id;
+
+# FULL OUTER JOIN
+
+* in mysql it doesnt spport but with UNION we can simulate them
+
+- SELECT t1.*, t2.*
+  FROM
+  sakila.table1 t1
+  LEFT OUTER JOIN
+  sakila.table2 t2
+  ON t1.id = t2.id
+  UNION
+  SELECT t1.*, t2.*
+  FROM
+  sakila.table1 t1
+  RIGHT OUTER JOIN
+  sakila.table2 t2
+  ON t1.id = t2.id;
+
+=> CROSS JOIN
+
+* each row get mulitplied by all the rows of second table 
+
+- SELECT t1.*, t2.*
+  FROM
+  sakila.table1 t1
+  CROSS JOIN
+  sakila.table2 t2;
+
+* here no need to provide the condition because it is just a product
+* if we specify the condition it will return the unique rows like INNER JOIN
+
+-----------------------------------------------------------------------------
+
+Scenario:-
+
+* We have three tables 1) students 2) Classes 3) StudentClass
+* The student can sign up maximum of three classes
+* In summer student can opt out and can sign up for no classes
+
+question1 :-
+What will be the best possible join if we want to retrieve all the students who
+have signed up for the classes in summer?
+
+question 2:-
+What will be the best possible joins if we want to retrieve all the students
+who have signed up for no classes in summer?
+
+	Students			Classes			StudentClass
+ _________________________     _____________________    _____________________
+| StudentID | StudentName |   | ClassID | ClassName |  | ClassID | StudentID |
+|___________|_____________|   |_________|___________|  |_________|___________|
+|    1      |    John     |   |    1    |    Math   |  |     1   |    1      |
+|    2      |    Matt     |   |    2    |    Art    |  |     1   |    2      |
+|    3      |    James    |   |    3    |  History  |  |     3   |    1      |
+|___________|_____________|   |_________|___________|  |     3   |    2      |
+                                                       |     3   |    3      |
+                                                       |_________|___________|
+                                                       
+                                                      
+Solutions :- 
+
+- CREATE TABLE students
+  (studentid INT, studentname VARCHAR(45));
+- CREATE TABLE Classes
+  (classid INT, classname VARCHAR(45));
+- CREATE TABLE studentclass
+  (studentid INT, classid INT)
+
+- INSERT INTO students(studentid, studentname)
+  SELECT 1,'John'  UNION ALL
+  SELECT 2,'Matt'  UNION ALL
+  SELECT 3,'James';
+
+- INSERT INTO classes(classid, classname)
+  SELECT 1,'Math' UNION ALL
+  SELECT 2,'Art'  UNION ALL
+  SELECT 3,'History';
+
+- INSERT INTO studentclass(studentid, classid)
+  SELECT 1,1  UNION ALL
+  SELECT 1,2  UNION ALL
+  SELECT 3,1  UNION ALL
+  SELECT 3,2  UNION ALL
+  SELECT 3,3;
+
+answer1 :- 
+	   SELECT s.studentname, c.classname
+  	   FROM studentclass sc
+	   INNER JOIN 
+	   classes c ON c.classid = sc.classid
+	   INNER JOIN 
+	   students s ON s.studentid = sc.studentid;
+
+answer2 :- 
+	   SELECT s.studentname, c.classname
+           FROM students s
+           LEFT JOIN studentclass sc ON s.studentid = sc.studentid
+           LEFT JOIN classes c ON c.classid = sc.classid
+  	   WHERE c.classname IS NULL; 
+
+* first execute without where clause
+
+# EQUI JOIN 
+
+* specific type of comparator based join that uses only equality comparisions in the join-predicate
+
+- SELECT t1.*, t2.*
+  FROM table1 t1
+  INNER JOIN 
+  table2 t2
+  ON t1.id = t2.id;
+
+# NON EQUI JOIN
+
+- SELECT t1.*, t2.*
+  FROM table1 t1
+  INNER JOIN 
+  table2 t2
+  ON t1.id > t2.id;
+
+* we can use outer join as well but the sense is operator to keep in mind
+
+# SELF JOIN
+
+- SELECT t1.*, t2.*
+  FROM table1 t1
+  INNER JOIN 
+  table1 t2
+  ON t1.id = t2.id;
+
+# NATURAL JOIN
+
+* kind of join which joins two or more tables based on all the columns in 
+  the two tables with the same name
+* it can be either INNER or OUTER JOIN
+
+- SELECT t1.*, t2.*
+  FROM table t1
+  NATURAL JOIN 
+  table t2;
+
+* join the identical columns in both tables
+
+- SELECT t1.*, t2.*
+  FROM table t1
+  NATURAL LEFT JOIN 
+  table t2;
+
+# JOINS with USING KEYWORDS
+
+* simplifies the syntax for joining tables when the columns have the same
+  name in both the tables
+* USING keywords can be used with INNER or OUTER JOINS
+* we can use more than one column USING keywords
+
+- comparing two queries
+
+- SELECT t1.id AS T1id, t1.value As T1Value, t2.id As T2id, t2.value AS T2Value
+  FROM table t1
+  INNER JOIN 
+  table t2
+  ON t1.id = t2.id;
+
+- SELECT t1.id AS T1id, t1.value As T1Value, t2.id As T2id, t2.value AS T2Value
+  FROM table t1
+  INNER JOIN 
+  table t2
+  USING (id);
+
+- SELECT t1.id AS T1id, t1.value As T1Value, t2.id As T2id, t2.value AS T2Value
+  FROM table t1
+  INNER JOIN 
+  table t2
+  USING (id, value);
+________________________________________________________________________________________
+
+-> UNION OERATORS
+
+* combines two or more select statements into single query result set
+* each select statement of must have the same number of columns
+* UNION removes duplicate rows
+* UNION ALL doesn't remove duplicate rows
+* Only one ORDER BY clause sorting entire result set
+* can simulate FULL OUTER JOIN (we have already seen)
+
+- SELECT t1.id AS T1id, t1.value As T1Value
+  FROM table1 t1;
+  UNION ALL 
+  SELECT t2.id AS T2id, t2.value As T2Value
+  FROM table2 t2;
+
+- SELECT t1.id AS T1id, t1.value As T1Value
+  FROM table1 t1;
+  UNION 						// removes the duplicate values
+  SELECT t2.id AS T2id, t2.value As T2Value
+  FROM table2 t2;
+
+- SELECT t1.id AS T1id, t1.value As T1Value
+  FROM table1 t1;
+  UNION ALL 
+  SELECT t2.id AS T2id, t2.value As T2Value
+  FROM table2 t2
+  ORDER BY T1Value DESC;
+
+_______________________________________________________________________________________________
+
+-> SUBQUERIES
+
+* are used in WHERE, HAVING, FROM, SELECT 
+* ORDER BY clause is not allowed in subquery 
+* a subquery can have only one column in select clause if used in where clause
+
+- SELECT t1.*
+  FROM table t1
+  WHERE t1.id NOT IN
+  (SELECT t2.id FROM table2 t2);
+
+--DEMO
+
+- USE sakila;
+
+- SELECT c.customer_id,c.first_name,c.last_name
+  FROM sakila.customer c 
+  WHERE c.customer_id IN
+  (SELECT r.customer_id FROM sakila.rental r
+	WHERE r.inventory_id IN
+	(SELECT i.inventory_id FROM sakila.inventory i
+		WHERE i.film_id IN
+		(SELECT f.film_id FROM film f
+   			WHERE f.film_id IN
+   			(SELECT fc.film_id FROM film_category fc
+   				 WHERE fc.category_id IN
+   				 (SELECT cat.category_id FROM category cat
+   					WHERE cat.name = 'Action'
+   )))))
+  ORDER BY c.customer_id,c.first_name,c.last_name;
+  
+* as per schema of sakila database
+
+* retrieving same results using JOINS
+
+- SELECT DISTINCT cust.customer_id, cust.first_name, cust.last_name
+  FROM customer cust
+  INNER JOIN rental ren ON ren.customer_id = cust.customer_id
+  INNER JOIN inventory inv ON inv.inventory_id = ren.invetory_id
+  INNER JOIN film fl ON fl.film_id = inv.film_id
+  INNER JOIN film_category fc ON fc.film_id = fl.film_id
+  INNER JOIN category cat ON cat.category_id = fc.category_id
+  WHERE cat.name = 'Action'
+  ORDER BY cust.customer_id,cust.first_name, cust.last_name;
+
+# JOINS VS SUBQUERIES
+
+* we cant add columns of other table in subqueries but we can specify columns
+  in JOINS from outer tables ex: we can add fl.film_id in SELECT clause of JOINS but not in subqueries
+
+- USE sakila;
+
+- SELECT fm.tittle, cat.name, dt.CountofCategory
+  FROM film fm
+  INNER JOIN film_category fc ON fc.film_id = fm.film_id
+  INNER JOIN category cat ON cat.category_id = fc.category_id
+  INNER JOIN 
+   (SELECT COUNT(*) AS CountofCategory, fc.category_id
+    FROM film_category fc
+    GROUP BY fc.category_id) dt ON dt.category_id = fc.category_id;
+________________________________________________________________________________________________
+
+-> CORELATED QUERIES
+
+* are the queries that is executed once for each row
+* returns results based on the column of main query
+
+- SELECT t1.*
+  FROM table1 t1
+  WHERE t1.id IN 
+  (SELECT t2.id FROM table2 t2 WHERE t2.value = t1.value)
+
+- // find all the customers payment which are over their average payment
+
+- SELECT payment_id, cust.first_name, cust.last_name, amount
+  FROM payment pt
+  INNER JOIN customer cust ON cust.customer_id = pt.customer_id
+  WHERE amount > 
+  (SELECT AVG(amount) FROM payment pt1 WHERE pt1.customer_id = pt.customer_id)
+  ORDER BY cust.customer_id;
+
+________________________________________________________________________________________________________________
+
+
+-> FUNCTIONS IN MySQL
+
+* STRING FUNCTIONS, NUMERIC FUCTIONS, DATE/TIME FUNCTION, CONTROL FLOW FUNCTION
+  CAST FUNCTIONS, INFORMATION FUNCTIONS, MISCELLANEOUS FUNCTINOS
+* AGGREGATE FUNCTIONS/ COLUMNS FUNCTION
+* STORED FUNCTION / USER DEFINE FUNCTIONS
+
+# SCALAR FUNCTIONS - NUMERIC FUNCTIONS, STRING FUNCTIONS, DATE/TIME FUNCTINOS
+
+- SELECT ASCII('a'), ASCII('A');	  	// returns the numeric value of left most character
+- SELECT CHAR(77,123,99,72);			// returns all value in form of char string
+- SELECT CAHR(65);				// return single char
+- SELECT LENGTH('IZAHR'), LENGTH('IZHAR  ')	// see the diff in result
+- SELECT CONCAT('MOHD','IZHAR','AHMAD')		// join into single string
+- SELECT CONCAT('MOHD',NULL,'IZHAR')		// returns the null value
+- SELECT LCASE('MohdIzhar'), LOWER('MOHDIZHAR') // lcase make the upper case to lowercase while lower make all uppercase into lower case
+- SELECT UCASE('MohdIzhar'), UPPER('MOHDIZHAR')	
+- SELECT LEFT('MohdIzhar',4), LEFT('MOHDIZHAR',3)// returns the left 3 characters of string
+- SELECT RIGHT('MohdIzhar',4), RIGHT('MOHDIZHAR',3)
+- SELECT RTRIM('  MohdIzhar  '), LENGTH(RTRIM('  MOHDIZHAR  ')) // to remove trailing spaces
+- SELECT LTRIM('  MohdIzhar  '), LENGTH(LTRIM('  MOHDIZHAR  ')) // to remove heading spaces
+- SELECT TRIM('  MohdIzhar  '), LENGTH(TRIM('  MOHDIZHAR  '))	// to remove both spaces
+- SELECT STRCMP('MySQLAuthority','SQLAuthority'),
+         STRCMP('SQLAuthority','MySQLAuthority'),
+	 STRCMP('SQLAuthority','SQLAuthority');
+- SELECT REVERSE('SQLAuthority'); 
+
+- SELECT ABS(66), ABS(-66);
+- SELECT CEILING(12.34), CEILING(-12.34);
+- SELECT DEGREES(PI()),DEGREES(PI()/2);
+- SELECT FLOOR(12.34),FLOOR(-12.34);		// returns lowest integer value12, -13
+- SELECT PI();
+- SELECT PI()+0.000000000000;
+- SELECT POW(2,3);
+- SELECT POWER/POW(8,-3);			// POWER OR POW are same
+- SELECT SQRT(4);
+- SELECT ADDDATE('2020-04-20', INTERVAL 45 DAY), 
+  DATE_ADD('2020-04-20', INTERVAL 45 DAY);	// to add days in month
+- SELECT SUBATE('2020-04-20', INTERVAL 45 DAY), 
+  DATE_SUB('2020-04-20', INTERVAL 45 DAY);	// to subtract days in month
+
+- SELECT CURDATE(), CURRENT_DATE(), CURRENT_DATE;
+- SELECT CURTIME(), CURRENT_TIME(), CURRENT_TIME;
+- SELECT NOW(), CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP;
+
+* we have already seen the date format
+
+# CASE OPERATORS
+
+- SET @Var = 1;
+  SELECT CASE @Var
+		WHEN 1 THEN 'one'
+		WHEN 2 THEN 'two'
+	ELSE 'more' END AS Result;
+
+- SELECT CASE WHEN @Var = 1 THEN 'one'
+	      WHEN @Var = 2 THEN 'two'
+	ELSE 'more' END AS Result;
+
+- SET @Var = 11;
+- SET @Var = 12;
+- SELECT CASE WHEN (@Var = 11 AND @Var = 13) THEN 'one'
+              WHEN @Var = 12 THEN 'two'
+	  ELSE 'more' END AS Results;
+ 
+- SELECT IF(1>2,2,3);
+- SELECT IF(1<2,'yes','no');
+- SELECT IF(YEAR(NOW()) = 2020, 'yes', 'no');
+
+- SELECT IFNULL(1,0);
+- SELECT IFNULL(NULL,0);
+- SELECT 1/0;
+- SELECT IFNULL(1/0,'YES');
+
+- SELECT NULLIF(1,1);			// return null if both value are identical
+- SELECT NULLIF(1,2);			// will return first value if not identical
+
+# CAST OR CONVERT FUNCTIONS
+
+- SELECT 1-2;
+- SELECT CAST(1-2 AS UNSIGNED);
+- SELECT CAST(1-2 AS SIGNED);
+
+- SELECT CONVERT('2013-06-19 14:45:08', DATE) AS DATE1
+- SELECT CONVERT('13-06-19 14:45:08', DATE) AS DATE2
+- SELECT CONVERT('20130619', DATE) AS DATE3
+- SELECT CONVERT('210419', DATE) AS DATE4
+
+- SELECT CONVERT('14:45:08', TIME) AS TIME1
+- SELECT CONVERT('144508', TIME) AS TIME2
+
+- SELECT CONVERT('11.3',DECIMAL(4,2)) AS Dec1
+
+# INFORMATION FUNCTIONS
+
+- SELECT CHARSET('SQLAuthority');
+- SELECT CONNECTION_ID();
+- SELECT CURRENT_USER(), CURRENT_USER;
+- SELECT DATABASE(), SCHEMA();
+- SELECT USER();
+- SELECT VERSION();
+
+# MISCELLANEOUS FUNCTIONS
+
+- SELECT RAND() AS RandomNumber; 		// return random float value
+- SELECT NOW();
+- SELECT SLEEP(5);
+- SELECT NOW();
+- SELECT UUID();
+
+# AGGREGETE FUNCTIONS - ignores null values
+
+- MAX(), MIN(), COUNT
+
+______________________________________________________________________________________________________________________
+
+-> VIEW 
+
+* a view is commonly known as virtual table
+* a view is a virtual table based on the result set of SQL statement
+* a view consist of SELECT statement that is stored as an object in the database
+* the tables referenced in the views are known as Base table
+* view does not store data technically data is derived from the base tables at run time
+* MySQL supports nested view
+
+
+- CREATE VIEW vw_allactor
+  AS
+  SELECT * FROM sakila.actor;
+
+- SELECT * FROM vw_allactor;
+
+- SELECT * FROM vw_allactor vw
+  WHERE vw.first_name LIKE 'A%';
+
+- DROP VIEW vw_allactor;
+
+# UPDATABLE VIEW - Restrictions
+
+a view is not updatable if it contains the following:-
+* aggeregate functions, max(),min(),count(), and so forth
+* distinct
+* group by 
+* having
+* union or union all
+* subquery in selected list
+* certain joins
+
+
+# DML Operations on View
+
+- SELECT language_id, name, last_update
+  FROM sakila.language;
+   
+- CREATE VIEW DML_OPERATION
+  AS
+  SELECT language_id, name, last_update
+  FROM sakila.language;
+  
+- SELECT * FROM DML_OPERATION;
+
+- INSERT INTO DML_OPERATION(name,last_update)
+  VALUES ('Hindi','2020-04-21 05:45:32');
+
+- SELECT * FROM DML_OPERATION;
+
+- UPDATE DML_OPERATION
+  SET name = 'Spanish'
+  WHERE name = 'Hindi';
+
+- SELECT * FROM DML_OPERATION;
+
+- DELETE FROM DML_OPERATION
+  WHERE name = 'Spanish';
+
+- DROP VIEW DML_OPERATION;
+
+** VIEW WITH CHECK OPTION - view created with check option will prevent 
+                            modifying a row in such a way that it would no
+			    longer be part of the view result
+
+- SELECT language_id, name, last_update
+  FROM sakila.language;
+   
+- CREATE VIEW DML_OPERATION
+  AS
+  SELECT language_id, name, last_update
+  FROM sakila.language
+  WHERE last_update = '2006-02-15 05:02:19'
+  WITH CHECK OPTION;
+  
+- SELECT * FROM DML_OPERATION;
+
+- INSERT INTO DML_OPERATION(name,last_update)
+  VALUES ('Hindi','2020-04-21 05:45:32');		// the query will fail because of the violation of WHERE statement in creation of view
+
+- INSERT INTO DML_OPERATION(name,last_update)
+  VALUES ('Hindi','2006-02-15 05:02:19');		// now the query will be successfull beacuse we have match the WHERE condition of view
+
+- SELECT * FROM DML_OPERATION;
+
+- UPDATE DML_OPERATION
+  SET last_update = '2020-04-12 05:45:09'		// the query will fail
+  WHERE name = 'Hindi';
+
+- UPDATE DML_OPERATION
+  SET name = 'Spanish'
+  WHERE name = 'Hindi';					// this will work
+
+- SELECT * FROM DML_OPERATION;
+
+* performing DML operation on base table
+
+- INSERT INTO language(name,last_update)
+  VALUES ('New lang','2013-02-15 05:02:19');
+	
+- SELECT language_id, name, last_update
+  FROM language;
+
+- UPDATE language
+  SET last_update = '2013-02-15 05:02:19'
+  WHERE name = 'German';
+
+* changes made to base table are not reflected in VIEW table
+
+- DROP VIEW DML_OPERATION;
+ 
+_____________________________________________________________________________________________________
+
+-> STORED PROGRAMS
+
+* STORED PROCEDURE
+* STORED FUNCTION
+* TRIGGERS
+* EVENTS
+
+# STORED PROCEDURE
+
+* is a subroutine available to applications that access a relational database system
+* contains one or more SQL statements stored in database
+* used for data validation as well as access control methods
+* parameters used to pass one or more values from calling program
+
+--DEMO
+
+- DELIMITER //
+  CREATE PROCEDURE GetLanguage()
+  BEGIN
+    SELECT * FROM language;
+  END//
+  DELIMITER ;
+
+CALL GetLanguage();
+
+- DROP PROCEDURE GetLanguage;
+
+--
+
+DELIMITER //
+CREATE PROCEDURE WhileLoop()
+BEGIN
+DECLARE i INT DEFAULT 1;
+WHILE i<6 DO
+ SELECT POW(i,i);
+ SET i=i+1;
+ END WHILE;
+END//
+DELIMITER ;
+
+CALL WhileLoop();
+
+DROP PROCEDURE WhileLoop;
+
+--
+
+DELIMITER //
+CREATE PROCEDURE ContactName(FirstName VARCHAR(100),LastName VARCHAR(100))
+BEGIN
+ DECLARE FullName VARCHAR(200);
+ SET FullName = CONCAT(FirstName,' ',LastName);
+ SELECT FullName;
+END//
+DELIMITER ;
+
+CALL ContactName('Mohd','Izhar');
+
+DROP PROCEDURE ContactName;
+ 
+--DML operation demo
+
+DELIMITER //
+CREATE PROCEDURE InsertValue(NameofLang VARCHAR(100))
+BEGIN
+ INSERT INTO language(name, last_update)
+ VALUES (NameofLang, NOW());
+ SELECT LAST_INSERT_ID();
+END//
+DELIMITER ;
+
+CALL InsertValue('Hindi');
+CALL InsertValue('Gujarati');
+
+SELECT * FROM language;
+
+DROP PROCEDURE InsertValue;
+
+-- INPUT AND OUTPUT PARAMETERS
+
+DELIMITER //
+CREATE PROCEDURE InsertValue(IN NameofLang VARCHAR(100),OUT LangID INT)
+BEGIN
+INSERT INTO language(name,last_update)
+VALUES(NameofLang,NOW());
+SET LangID = LAST_INSERT_ID();
+END//
+DELIMITER ;
+
+CALL InsertValue('Arabic',@LangID);
+SELECT CONCAT('Last Language_ID is ',@LangID);
+
+SELECT * FROM language;
+
+DROP PROCEDURE InsertValue;
+
+--
+
+DELIMITER //
+DROP PROCEDURE IFEXISTS GetLanguage()
+CREATE PROCEDURE GetLanguage()
+BEGIN
+ SELECT name FROM language;
+END//
+DELIMITER ;
+
+CALL GetLanguage;
+
+# STORED FUNCTIONS
+
+* is an executable database object with SQL procedural code
+* stored function is often called as UDF
+* a function cant modify or change in the database by executing INSERT,UPDATE or DELETE statements
+
+-- DEMO # SET GLOBAL log_bin_trust_function_creators = 1;
+
+DELIMITER //
+
+CREATE FUNCTION GetLanguage(lang_id INT)
+RETURNS VARCHAR(100)
+BEGIN
+
+DECLARE LangName VARCHAR(100);
+SELECT name INTO LangName
+FROM language
+WHERE language_id = lang_id;
+
+RETURN(LangName);
+END//
+
+DELIMITER ; 
+
+SELECT GetLanguage(1);
+SELECT GetLanguage(2);
+SELECT GetLanguage(3);
+SELECT GetLanguage(4); 
+ 
+SELECT title, language_id, GetLanguage(language_id)		// passing parameter from table column
+FROM film;
+
+--
+
+DELIMITER //
+CREATE FUNCTION RentalCountsbyCust(cust_id INT)
+RETURNS INT
+BEGIN
+
+DECLARE RentalCounts INT;
+SELECT COUNT(*) NoRentals 
+INTO RentalCounts
+FROM rental
+WHERE customer_id = cust_id;
+
+RETURN(RentalCounts);
+END//
+DELIMITER ;
+
+SELECT first_name, last_name,
+RentalCountsbyCust(customer_id) TotalMovieRented
+FROM customer;
+
+DROP FUNCTION RentalCountsbyCust;
+
+_______________________________________________________________________________________________________________
+
+-> TRGIGGERS
+
+* often called triggering firing
+* executed automatically when DML operation are executed
+* must be created with FOR EACH ROW
+* OLD keyword get value from the row that is being updated or deleted
+* NEW keyword get value from the row that is being inserted or updated
+
+--DEMO
+
+DELIMITER //
+CREATE TRIGGER Language_Before_Insert
+BEFORE INSERT on language
+FOR EACH ROW
+BEGIN
+
+SET NEW.name = CONCAT(UPPER(SUBSTRING(NEW.name,1,1)),
+			LOWER(SUBSTRING(NEW.name FROM 2)));
+
+END//
+DELIMITER ;
+
+
+INSERT INTO language(name)
+VALUES ('spanish');
+INSERT INTO language(name)
+VALUES ('HINDI');
+INSERT INTO language(name)
+VALUES ('GuJARATI');
+
+SELECT * FROM language;
+
+DROP TRIGGER Language_Before_Insert;
+
+--
+CREATE TABLE Audit_language
+(language_id TINYINT(3),name CHAR(20),
+last_update TIMESTAMP, RowValue CHAR(20));
+
+DELIMITER //
+CREATE TRIGGER Language_After_Insert
+AFTER UPDATE on language
+FOR EACH ROW
+BEGIN
+
+INSERT INTO Audit_language(language_id,name,last_update,RowValue)
+VALUES(OLD.language_id,OLD.name,OLD.last_update,'Before Update');
+
+INSERT INTO Audit_language(language_id,name,last_update,RowValue)
+VALUES(NEW.language_id,NEW.name,NEW.last_update,'After Update');
+END//
+
+DELIMITER ;
+
+SELECT * FROM language;
+SELECT * FROM Audit_language;
+
+UPDATE language
+SET name='Spanish-new'
+WHERE language_id = 10;
+
+UPDATE language
+SET name='Hindi-new'
+WHERE language_id = 11;
+
+SELECT * FROM language;
+SELECT * FROM Audit_language;
+
+DROP TRIGGER Language_After_Update;
+DROP TABLE Audit_language;
+
+# EVENTS
+
+* used in maintenance
+
+SET GLOBAL event_scheduler = ON;
+
+CREATE TABLE Event_Audit
+(ID INT NOT NULL AUTO_INCREMENT,
+Last_Update TIMESTAMP, PRIMARY KEY(ID));
+
+DELIMITER //
+CREATE EVENT one_time_event
+ON SCHEDULE AT NOW() + INTERVAL 1 MINUTE
+DO BEGIN
+INSERT INTO Event_Audit(Last_Update)
+VALUES (NOW());
+END//
+DELIMITER ;
+
+SELECT * FROM Event_Audit;
+
+DROP TABLE Event_Audit;
+DROP EVENT one_time_event;
+
